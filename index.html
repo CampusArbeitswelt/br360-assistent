@@ -3,7 +3,6 @@
 
 <!-- BR360 Assistent – CampusArbeitswelt | In Shopify: Online Store > Pages > HTML-Ansicht einfügen -->
 <link href="https://fonts.googleapis.com/css2?family=DM%2BSans:wght@300;400;500;600&family=DM%2BSerif%2BDisplay&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/docx@8.5.0/build/index.min.js"></script>
 
 <style>
 
@@ -620,12 +619,8 @@ Der Beschluss ist damit ${erg}.
 ${gd.stadt||'[Ort]'}, den ${fd(v('ba-datum'))}
 
 
-Unterschrift Betriebsratsvorsitzende/r          Unterschrift Betriebsratsmitglied
-
-
 ________________________________          ________________________________
-${v('ba-vorsitz')||'[Name Vorsitzende/r]'}          ________________________________
-Betriebsratsvorsitzende/r                              Betriebsratsmitglied`;
+Unterschrift Betriebsratsvorsitzende/r    Unterschrift Betriebsratsmitglied`;
   }
 
   if (mode === 'beschluss-seminar') {
@@ -690,8 +685,7 @@ Wir erwarten Ihre zeitnahe Rückmeldung.
 Mit freundlichen Grüßen
 
 ________________________________
-${v('sv-name')||'[Name]'}
-${gremium}svorsitzende/r`;
+Unterschrift ${gremium}svorsitzende/r`;
   }
 
   if (mode === 'einladung-br') {
@@ -807,8 +801,7 @@ ${gd.stadt||'[Ort]'}, den ${fd(v('pr-datum'))}
 
 
 ________________________________          ________________________________
-${v('pr-leiter')||'[Name]'}                              (Name in Druckbuchstaben)
-${gremium}svorsitzende/r                              Protokollführung`;
+Unterschrift ${gremium}svorsitzende/r         Unterschrift Protokollführung`;
   }
 
   if (mode === 'mitteilung') {
@@ -894,493 +887,29 @@ function downloadWord() {
   const title = document.getElementById('res-title').textContent;
   if (!text || text.includes('Fehler')) return;
 
-  try {
-    const docxLib = window.docx || docx;
-  const { Document, Packer, Paragraph, TextRun, AlignmentType, TabStopType, TabStopPosition } = docxLib;
-
-    const lines = text.split('\n');
-    const children = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      // Signature line with two names side by side
-      if (line.includes('________________________________') && lines[i+1] && lines[i+1].includes('          ')) {
-        children.push(new Paragraph({
-          children: [new TextRun({ text: line, font: 'Arial', size: 24 })]
-        }));
-      } else if (line.includes('          ') && i > 0 && lines[i-1].includes('________________________________')) {
-        // Split name line into two columns using tab
-        const parts = line.split('          ').filter(p => p.trim());
-        children.push(new Paragraph({
-          tabStops: [{ type: TabStopType.LEFT, position: 4320 }],
-          children: [
-            new TextRun({ text: parts[0] || '', font: 'Arial', size: 24 }),
-            new TextRun({ text: '\t' + (parts[1] || ''), font: 'Arial', size: 24 }),
-          ]
-        }));
-      } else if (line.trim() === '') {
-        children.push(new Paragraph({ children: [new TextRun('')] }));
-      } else if (line === line.toUpperCase() && line.trim().length > 3 && !line.includes('|')) {
-        children.push(new Paragraph({
-          children: [new TextRun({ text: line, bold: true, font: 'Arial', size: 24 })]
-        }));
-      } else {
-        children.push(new Paragraph({
-          children: [new TextRun({ text: line, font: 'Arial', size: 24 })]
-        }));
-      }
-    }
-
-    const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            size: { width: 11906, height: 16838 },
-            margin: { top: 1440, right: 1440, bottom: 1440, left: 1701 }
-          }
-        },
-        children: children
-      }]
-    });
-
-    Packer.toBlob(doc).then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = title.replace(/[^a-zA-Z0-9äöüÄÖÜß\s]/g, '').trim() + '.docx';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-  } catch(e) {
-    alert('Word-Download fehlgeschlagen: ' + e.message);
-  }
-}
-</script>
-
-</div>
-
-<script>
-
-// ── State ─────────────────────────────────
-let gd = {};
-let lastMode = null;
-let tops = { ebr:[], egl:[], pr:[] };
-
-// ── Setup ─────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  const s = localStorage.getItem('br360_v3');
-  if (s) { gd = JSON.parse(s); applyGd(); closeOv(); } 
-  else { document.getElementById('ov').classList.remove('hidden'); }
-});
-
-function sNext(n) {
-  document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('on'));
-  document.getElementById('ss' + n).classList.add('on');
-  [1,2,3].forEach(i => document.getElementById('d'+i).classList.toggle('done', i<=n));
-}
-
-function sFinish() {
-  gd = {
-    firma: document.getElementById('su-firma').value.trim(),
-    gremium: document.getElementById('su-gremium').value,
-    str: document.getElementById('su-str').value.trim(),
-    plz: document.getElementById('su-plz').value.trim(),
-    stadt: document.getElementById('su-stadt').value.trim(),
-    vorsitz: document.getElementById('su-vorsitz').value.trim(),
-    mitgl: document.getElementById('su-mitgl').value.trim()
-  };
-  localStorage.setItem('br360_v3', JSON.stringify(gd));
-  document.getElementById('su-sum').innerHTML =
-    `<b>${gd.gremium}</b> der ${gd.firma}<br>${gd.str}, ${gd.plz} ${gd.stadt}<br>Vorsitzende/r: ${gd.vorsitz}${gd.mitgl?' · '+gd.mitgl+' Mitglieder':''}`;
-  document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('on'));
-  document.getElementById('ss-done').classList.add('on');
-  document.querySelectorAll('.prog-d').forEach(d => d.classList.add('done'));
-}
-
-function closeOv() {
-  document.getElementById('ov').classList.add('hidden');
-  document.getElementById('sbar').classList.remove('hidden');
-  updateSbar();
-  applyGd();
-}
-
-function openSetup() {
-  if (gd.firma) document.getElementById('su-firma').value = gd.firma;
-  if (gd.gremium) document.getElementById('su-gremium').value = gd.gremium;
-  if (gd.str) document.getElementById('su-str').value = gd.str;
-  if (gd.plz) document.getElementById('su-plz').value = gd.plz;
-  if (gd.stadt) document.getElementById('su-stadt').value = gd.stadt;
-  if (gd.vorsitz) document.getElementById('su-vorsitz').value = gd.vorsitz;
-  if (gd.mitgl) document.getElementById('su-mitgl').value = gd.mitgl;
-  sNext(1);
-  document.getElementById('ov').classList.remove('hidden');
-}
-
-function updateSbar() {
-  if (gd.firma) document.getElementById('sbar-lbl').innerHTML =
-    `Eingerichtet für: <strong>${gd.gremium} · ${gd.firma}</strong>`;
-}
-
-function applyGd() {
-  if (!gd.firma) return;
-  const ansch = `${gd.gremium} der ${gd.firma}\n${gd.str}\n${gd.plz} ${gd.stadt}`;
-  setIfEmpty('ba-anschrift', ansch);
-  setIfEmpty('ba-vorsitz', gd.vorsitz);
-  setIfEmpty('sv-name', gd.vorsitz);
-  setIfEmpty('sv-ort', gd.stadt);
-  setIfEmpty('sv-adr', `${gd.str}, ${gd.plz} ${gd.stadt}`);
-  setIfEmpty('ebr-vorsitz', gd.vorsitz);
-  setIfEmpty('egl-vorsitz', gd.vorsitz);
-  setIfEmpty('eao-vorsitz', gd.vorsitz);
-  setIfEmpty('pr-leiter', gd.vorsitz);
-  setIfEmpty('mt-vorsitz', gd.vorsitz);
-}
-
-function setIfEmpty(id, val) {
-  const el = document.getElementById(id);
-  if (el && !el.value && val) el.value = val;
-}
-
-// ── Tabs ──────────────────────────────────
-function setTab(t) {
-  document.querySelectorAll('.tabs > .tab').forEach((b,i) => {
-    b.classList.toggle('active', ['beschluss','einladung','protokoll','mitteilung'][i]===t);
-  });
-  document.querySelectorAll('[id^="panel-"]').forEach(p => p.classList.remove('on'));
-  document.getElementById('panel-'+t).classList.add('on');
-  document.getElementById('result-card').classList.remove('on');
-  applyGd();
-}
-
-function setSubTab(parent, sub) {
-  const panel = document.getElementById('panel-'+parent);
-  panel.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  document.getElementById('stab-'+parent+'-'+sub).classList.add('active');
-  panel.querySelectorAll('[id^="sub-'+parent+'-"]').forEach(p => p.classList.remove('on'));
-  document.getElementById('sub-'+parent+'-'+sub).classList.add('on');
-  document.getElementById('result-card').classList.remove('on');
-}
-
-// ── TOP builder ───────────────────────────
-function addTop(key) {
-  const inp = document.getElementById('top-'+key+'-input');
-  const val = inp.value.trim();
-  if (!val) return;
-  tops[key] = tops[key] || [];
-  tops[key].push(val);
-  renderTops(key);
-  inp.value = '';
-  inp.focus();
-}
-
-function removeTop(key, i) {
-  tops[key].splice(i, 1);
-  renderTops(key);
-}
-
-function renderTops(key) {
-  const list = document.getElementById('top-'+key);
-  list.innerHTML = (tops[key]||[]).map((t,i) =>
-    `<div class="top-item"><span class="top-num">${i+1}.</span><span class="top-txt">${t}</span><button class="top-del" onclick="removeTop('${key}',${i})">✕</button></div>`
-  ).join('');
-}
-
-function getTops(key) {
-  return (tops[key]||[]).map((t,i) => `${i+1}. ${t}`).join('\n');
-}
-
-// ── Helpers ───────────────────────────────
-function v(id) { const e=document.getElementById(id); return e?e.value.trim():''; }
-function fd(d) { if(!d) return '[Datum]'; const[y,m,day]=d.split('-'); return `${day}.${m}.${y}`; }
-function ft(t) { if(!t) return '[Uhrzeit]'; const[h,m]=t.split(':'); return `${h}:${m} Uhr`; }
-function anschrift() { return v('ba-anschrift')||`${gd.gremium||'Betriebsrat'} der ${gd.firma||'[Firma]'}\n${gd.str||''}\n${gd.plz||''} ${gd.stadt||''}`; }
-
-// ── Prompts ───────────────────────────────
-function buildPrompt(mode) {
-  const firma = gd.firma || '[Firma]';
-  const gremium = gd.gremium || 'Betriebsrat';
-
-  if (mode === 'beschluss-allg') {
-    const ja=v('ba-ja')||'___', nein=v('ba-nein')||'___', enth=v('ba-enth')||'___';
-    const erg = (v('ba-ja')&&v('ba-nein')) ? (parseInt(ja)>parseInt(nein)?'angenommen':'abgelehnt') : '[angenommen/abgelehnt]';
-    return `Erstelle einen Betriebsratsbeschluss exakt in dieser Struktur (kein Markdown, nur Klartext):
-
-${anschrift()}
-
-BESCHLUSSFASSUNG
-Dieser Beschluss ist dem Protokoll der Betriebsratssitzung beizufügen.
-
-Betriebsratssitzung am ${fd(v('ba-datum'))}
-Anwesende: Siehe Anwesenheitsliste im Protokoll
-Beschlussfassung zum Tagesordnungspunkt ${v('ba-top')||'[Nr.]'}
-
-Der Betriebsrat beschließt:
-[Formuliere einen vollständigen rechtssicheren Beschlusstext auf Basis dieser Stichpunkte: "${v('ba-inhalt')||'[Inhalt]'}" – 1-3 Sätze, konkreter BR-Stil]
-
-Ja-Stimmen: ${ja}     |     Nein-Stimmen: ${nein}     |     Enthaltungen: ${enth}
-
-Der Beschluss ist damit ${erg}.
-
-${gd.stadt||'[Ort]'}, den ${fd(v('ba-datum'))}
-
-
-Unterschrift Betriebsratsvorsitzende/r          Unterschrift Betriebsratsmitglied
-
-
-________________________________          ________________________________
-${v('ba-vorsitz')||'[Name Vorsitzende/r]'}          ________________________________
-Betriebsratsvorsitzende/r                              Betriebsratsmitglied`;
-  }
-
-  if (mode === 'beschluss-seminar') {
-    const erg = `Der ${gremium} der ${firma} beschließt die Teilnahme von ${v('bs-tn')||'[Namen]'} am Seminar "${v('bs-titel')||'[Titel]'}" bei ${v('bs-anb')||'CampusArbeitswelt GmbH'} vom ${fd(v('bs-von'))} bis ${fd(v('bs-bis'))} in ${v('bs-ort')||'[Ort]'}.`;
-    return `Erstelle einen Betriebsratsbeschluss zur Seminarteilnahme nach § 37 Abs. 6 BetrVG (kein Markdown):
-
-BETRIEBSRATSBESCHLUSS ZUR SEMINARTEILNAHME
-${gremium} der ${firma}
-
-Betriebsratssitzung am ${fd(v('bs-datum'))}
-
-Folgender Beschluss wird zur Abstimmung gestellt:
-
-Der ${gremium} beschließt die Teilnahme von ${v('bs-tn')||'[Namen]'} im Zeitraum vom ${fd(v('bs-von'))} bis ${fd(v('bs-bis'))} an dem Seminar mit dem Titel "${v('bs-titel')||'[Titel]'}" des Seminaranbieters ${v('bs-anb')||'CampusArbeitswelt GmbH'}.
-Seminarort bei Präsenzveranstaltung: ${v('bs-ort')||'[Ort]'}
-${v('bs-ersatz')?`Ersatzmitglied bei Verhinderung: ${v('bs-ersatz')}`:''}
-
-Das Seminar stellt eine Schulungs- und Bildungsveranstaltung nach § 37 Abs. 6 BetrVG dar, die Kenntnisse vermittelt, die für die Arbeit des ${gremium}s erforderlich sind. Bei der zeitlichen Festlegung der Teilnahme wurden die betrieblichen Notwendigkeiten umfassend berücksichtigt.
-
-Ja-Stimmen: ${v('bs-ja')||'___'}     |     Nein-Stimmen: ${v('bs-nein')||'___'}     |     Enthaltungen: ${v('bs-enth')||'___'}
-
-Der Beschluss ist damit ${(v('bs-ja')&&v('bs-nein')) ? (parseInt(v('bs-ja'))>parseInt(v('bs-nein'))?'angenommen':'abgelehnt') : '[angenommen/abgelehnt]'}.
-
-[Ort], den ${fd(v('bs-datum'))}
-
-
-Unterschrift ${gremium}svorsitzende/r          Unterschrift ${gremium}smitglied
-
-________________________________          ________________________________
-${gd.vorsitz||'[Name Vorsitzende/r]'}
-${gremium}svorsitzende/r`;
-  }
-
-  if (mode === 'beschluss-sv') {
-    return `Erstelle ein formelles Schreiben an die Geschäftsführung zur Hinzuziehung eines Sachverständigen § 80 Abs. 3 BetrVG (kein Markdown, Klartext):
-
-${v('sv-name')||'[Name]'}
-${gremium}svorsitzende/r
-${v('sv-adr')||'[Adresse]'}
-
-An die Geschäftsführung
-im Hause
-
-${v('sv-ort')||'[Ort]'}, den ${new Date().toLocaleDateString('de-DE')}
-
-Beschluss über die Hinzuziehung eines Sachverständigen gemäß § 80 Abs. 3 BetrVG
-
-Sehr geehrte Damen und Herren,
-
-in seiner Sitzung am ${fd(v('sv-datum'))} hat der ${gremium} zur ordnungsgemäßen Wahrnehmung der ${gremium}saufgaben einen formellen Beschluss zur Hinzuziehung eines externen Sachverständigen gemäß § 80 Abs. 3 BetrVG gefasst.
-
-Hintergrund ist, dass dem ${gremium} zur fundierten Beurteilung der aktuellen Thematik – ${v('sv-thema')||'[Thema]'} – wesentliche Informationen und das notwendige Fachwissen fehlen. Eine sachgerechte Wahrnehmung unserer gesetzlichen Mitbestimmungsrechte ist ohne externe fachliche Unterstützung nicht möglich.
-
-Der Beratungsbedarf ist durch die Komplexität und Tragweite der geplanten Maßnahmen sachlich begründet. Die Auswahl des Sachverständigen sowie Umfang und Kosten der Beauftragung sind mitbestimmungspflichtig und stehen zur gemeinsamen Abstimmung.
-
-Wir setzen Ihnen hiermit eine Frist zur Abstimmung bis ${fd(v('sv-frist'))}.
-
-Sollte bis zu diesem Zeitpunkt keine Einigung erzielt werden, wird der ${gremium} ein arbeitsgerichtliches Beschlussverfahren einleiten, um die Zustimmung gemäß § 80 Abs. 3 Satz 2 BetrVG ersetzen zu lassen.
-
-Wir erwarten Ihre zeitnahe Rückmeldung.
-
-Mit freundlichen Grüßen
-
-________________________________
-${v('sv-name')||'[Name]'}
-${gremium}svorsitzende/r`;
-  }
-
-  if (mode === 'einladung-br') {
-    const topText = getTops('ebr') || '- Begrüßung\n- Genehmigung der Tagesordnung\n- Genehmigung des letzten Protokolls\n- [weitere Punkte]\n- Sonstiges';
-    return `Erstelle eine Einladung zur Betriebsratssitzung an alle BR-Mitglieder (kein Markdown, Klartext):
-
-${gremium} der ${firma}
-${gd.str||''}, ${gd.plz||''} ${gd.stadt||''}
-
-An alle Mitglieder des ${gremium}s
-
-${v('ebr-vorsitz')?v('ebr-vorsitz')+', ':''}${gd.stadt||'[Ort]'}, ${new Date().toLocaleDateString('de-DE')}
-
-Einladung zur ${v('ebr-art')||'Betriebsratssitzung'}
-
-Liebe Kolleginnen und Kollegen,
-
-die nächste Sitzung des ${gremium}s findet am ${fd(v('ebr-datum'))} um ${ft(v('ebr-uhrzeit'))} in ${v('ebr-ort')||'[Raum/Ort]'} statt. Zu dieser Sitzung lade ich Euch hiermit herzlich ein.
-
-Folgende Tagesordnung ist vorgesehen:
-
-${topText}
-
-Sollte jemand nicht an der Sitzung teilnehmen können, bitte ich, mir dies unter Angabe der Gründe unverzüglich mitzuteilen (§ 29 Abs. 2 BetrVG), damit ich rechtzeitig das entsprechende Ersatzmitglied einladen kann.
-
-Mit freundlichen Grüßen
-
-________________________________
-${v('ebr-vorsitz')||'[Name Vorsitzende/r]'}
-${gremium}svorsitzende/r`;
-  }
-
-  if (mode === 'einladung-gl') {
-    const topText = getTops('egl') || '- Begrüßung und Eröffnung\n- Feststellung der Beschlussfähigkeit\n- [Themen]\n- Sonstiges';
-    return `Erstelle eine Einladung an die Geschäftsleitung zur Betriebsratssitzung (kein Markdown, Klartext):
-
-${gremium} der ${firma}
-${gd.str||''}, ${gd.plz||''} ${gd.stadt||''}
-
-An die Geschäftsleitung
-im Hause
-
-${gd.stadt||'[Ort]'}, ${new Date().toLocaleDateString('de-DE')}
-
-Einladung zur Betriebsratssitzung am ${fd(v('egl-datum'))}
-
-Sehr geehrte Damen und Herren,
-
-${v('egl-kontext') ? v('egl-kontext')+', möchten' : 'wir möchten'} Sie zu unserer nächsten ${gremium}ssitzung am ${fd(v('egl-datum'))} um ${ft(v('egl-uhrzeit'))} in ${v('egl-ort')||'[Raum]'} einladen.
-
-Es werden folgende Themen der Tagesordnung behandelt:
-
-${topText}
-
-Wir gehen von Ihrer Teilnahme aus, andernfalls bitten wir um Mitteilung.
-
-Mit freundlichen Grüßen
-
-________________________________
-${v('egl-vorsitz')||'[Name Vorsitzende/r]'}
-${gremium}svorsitzende/r`;
-  }
-
-  if (mode === 'einladung-ao') {
-    return `Erstelle eine Mitteilung an die Geschäftsleitung über eine außerordentliche Betriebsratssitzung (kein Markdown, Klartext):
-
-${gremium} der ${firma}
-${gd.str||''}, ${gd.plz||''} ${gd.stadt||''}
-
-An die Geschäftsleitung
-im Hause
-
-${gd.stadt||'[Ort]'}, ${new Date().toLocaleDateString('de-DE')}
-
-Mitteilung über außerordentliche ${gremium}ssitzung
-
-Sehr geehrte Damen und Herren,
-
-aufgrund dringender Themen – ${v('eao-anlass')||'[Anlass]'} – informieren wir Sie hiermit über die Durchführung einer außerordentlichen ${gremium}ssitzung. Diese findet am ${fd(v('eao-datum'))} um ${ft(v('eao-uhrzeit'))} statt.
-
-Die Sitzung wird voraussichtlich ${v('eao-dauer')||'[Anzahl]'} Stunden dauern.
-
-Mit freundlichen Grüßen
-
-________________________________
-${v('eao-vorsitz')||'[Name Vorsitzende/r]'}
-${gremium}svorsitzende/r`;
-  }
-
-  if (mode === 'protokoll') {
-    const topText = getTops('pr') || '[Tagesordnungspunkte und Ergebnisse]';
-    return `Erstelle ein vollständiges Protokoll einer Betriebsratssitzung im professionellen Stil (kein Markdown, Klartext):
-
-${gremium} der ${firma}
-
-PROTOKOLL DER ${gremium.toUpperCase()}SSITZUNG
-
-Datum: ${fd(v('pr-datum'))}
-Von: ${ft(v('pr-von'))} bis ${ft(v('pr-bis'))}
-Ort: ${v('pr-ort')||'[Ort]'}
-Art: ${v('pr-art')||'Präsenzsitzung'}
-Sitzungsleitung: ${v('pr-leiter')||'[Name]'}
-Protokollführung: ${v('pr-proto')||'[Name]'}
-Anwesend: ${v('pr-anwesend')||'[Namen]'}
-${v('pr-entsch')?'Entschuldigt: '+v('pr-entsch'):''}
-
-Tagesordnungspunkte und Ergebnisse:
-${topText}
-
-Formuliere für jeden Tagesordnungspunkt einen kurzen Protokollabsatz im typischen BR-Protokoll-Stil. Beginne mit Feststellung der Beschlussfähigkeit. Schließe mit Unterschriftenblock:
-
-${gd.stadt||'[Ort]'}, den ${fd(v('pr-datum'))}
-
-
-________________________________          ________________________________
-${v('pr-leiter')||'[Name]'}                              (Name in Druckbuchstaben)
-${gremium}svorsitzende/r                              Protokollführung`;
-  }
-
-  if (mode === 'mitteilung') {
-    return `Erstelle eine Mitteilung an die Geschäftsleitung über regelmäßige Betriebsratssitzungen (kein Markdown, Klartext):
-
-${gremium} der ${firma}
-${gd.str||''}, ${gd.plz||''} ${gd.stadt||''}
-
-An die Geschäftsleitung
-im Hause
-
-${gd.stadt||'[Ort]'}, ${new Date().toLocaleDateString('de-DE')}
-
-Termine der regelmäßigen ${gremium}ssitzungen
-
-Sehr geehrte Damen und Herren,
-
-um eine bessere Planungssicherheit für die ${gremium}smitglieder als auch der betreffenden Führungskräfte zu schaffen, haben wir in unserer jüngsten ${gremium}ssitzung die regelmäßigen ${gremium}ssitzungen terminiert und beschlossen.
-
-Die regelmäßigen Sitzungen des ${gremium}s finden künftig ${v('mt-rhythmus')||'monatlich'} jeweils am ${v('mt-tag')||'[Wochentag]'} um ${ft(v('mt-uhrzeit'))} statt.
-
-Die Sitzungen werden voraussichtlich ${v('mt-dauer')||'[Anzahl]'} Stunden dauern, was je nach Umfang der zu besprechenden Themen jedoch auch ausgedehnt werden kann.
-
-Mit freundlichen Grüßen
-
-________________________________
-${v('mt-vorsitz')||'[Name Vorsitzende/r]'}
-${gremium}svorsitzende/r`;
-  }
-}
-
-// ── Generate ──────────────────────────────
-const titles = {
-  'beschluss-allg':'Allgemeiner Beschluss',
-  'beschluss-seminar':'Beschluss Seminarteilnahme',
-  'beschluss-sv':'Schreiben Sachverständiger §80',
-  'einladung-br':'Einladung an BR-Mitglieder',
-  'einladung-gl':'Einladung an Geschäftsleitung',
-  'einladung-ao':'Mitteilung außerordentliche Sitzung',
-  'protokoll':'Protokoll der Betriebsratssitzung',
-  'mitteilung':'Mitteilung Sitzungstermine'
-};
-
-async function generate(mode) {
-  lastMode = mode;
-  const prompt = buildPrompt(mode);
-  const btn = document.querySelector('.panel.on .btn-gen, #panel-beschluss .panel.on .btn-gen, #panel-einladung .panel.on .btn-gen');
-  if (btn) { btn.disabled=true; btn.innerHTML='<div class="dots"><span></span><span></span><span></span></div> Wird erstellt…'; }
-  document.getElementById('res-title').textContent = titles[mode]||'Ergebnis';
-  document.getElementById('result-text').textContent = '';
-  document.getElementById('result-card').classList.add('on');
-  try {
-    const res = await fetch('https://br360-proxy.rapid-term-edd3.workers.dev',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1500,messages:[{role:'user',content:prompt}]})
-    });
-    const data = await res.json();
-    const el = document.getElementById('result-text');
-    if(data.content && data.content[0] && data.content[0].text) {
-      el.textContent = data.content[0].text;
-    } else if(data.error) {
-      el.textContent = 'Fehler: ' + (data.error.message || 'Bitte erneut versuchen.');
+  const lines = text.split('\n');
+  let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>body{font-family:Arial;font-size:12pt;margin:2.5cm 2.5cm 2.5cm 3cm}p{margin:0;padding:2px 0;line-height:1.5}</style></head><body>';
+  lines.forEach(line => {
+    const esc = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (esc.trim() === '') {
+      html += '<p>&nbsp;</p>';
+    } else if (esc === esc.toUpperCase() && esc.trim().length > 3 && !esc.includes('|') && !esc.includes('_')) {
+      html += '<p><b>' + esc + '</b></p>';
     } else {
-      el.textContent = 'Fehler. Bitte erneut versuchen.';
+      html += '<p>' + esc + '</p>';
     }
-  } catch(e) { document.getElementById('result-text').textContent='Fehler. Bitte erneut versuchen.'; }
-  if(btn){ btn.disabled=false; btn.innerHTML='<svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M13 3L6 10l-3-3"/></svg> Erstellen'; }
+  });
+  html += '</body></html>';
+
+  const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (title||'Dokument').replace(/[^a-zA-Z0-9\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df ]/g,'').trim()+'.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function regen(){ if(lastMode) generate(lastMode); }
