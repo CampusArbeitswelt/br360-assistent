@@ -888,24 +888,53 @@ function downloadWord() {
   if (!text || text.includes('Fehler')) return;
 
   const lines = text.split('\n');
-  let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>body{font-family:Arial;font-size:12pt;margin:2.5cm 2.5cm 2.5cm 3cm}p{margin:0;padding:2px 0;line-height:1.5}</style></head><body>';
-  lines.forEach(line => {
-    const esc = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    if (esc.trim() === '') {
-      html += '<p>&nbsp;</p>';
-    } else if (esc === esc.toUpperCase() && esc.trim().length > 3 && !esc.includes('|') && !esc.includes('_')) {
-      html += '<p><b>' + esc + '</b></p>';
-    } else {
-      html += '<p>' + esc + '</p>';
-    }
-  });
-  html += '</body></html>';
+  let bodyHtml = '';
 
-  const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const esc = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    // Signature block: line with underscores followed by line with "Unterschrift"
+    if (esc.includes('________________________________') && lines[i+1] && lines[i+1].includes('Unterschrift')) {
+      const nextEsc = lines[i+1].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // Split "Unterschrift X   Unterschrift Y" into two parts
+      const parts = nextEsc.split(/\s{2,}/);
+      const left = parts[0] || '';
+      const right = parts[1] || '';
+      bodyHtml += `<table style="width:100%;border-collapse:collapse;margin-top:24pt"><tr>
+        <td style="width:45%;border:none;border-top:1px solid #000;padding-top:4pt;font-size:11pt">${left}</td>
+        <td style="width:10%;border:none"></td>
+        <td style="width:45%;border:none;border-top:1px solid #000;padding-top:4pt;font-size:11pt">${right}</td>
+      </tr></table>`;
+      i++; // skip next line, already used
+      continue;
+    }
+
+    if (esc.trim() === '') {
+      bodyHtml += '<p style="margin:0;line-height:1.2em">&nbsp;</p>';
+    } else if (esc === esc.toUpperCase() && esc.trim().length > 3 && !esc.includes('|') && !esc.includes('_')) {
+      bodyHtml += `<p style="margin:0;padding:2px 0;font-weight:bold;font-size:12pt">${esc}</p>`;
+    } else {
+      bodyHtml += `<p style="margin:0;padding:2px 0;font-size:12pt">${esc}</p>`;
+    }
+  }
+
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" 
+    xmlns:w="urn:schemas-microsoft-com:office:word" 
+    xmlns="http://www.w3.org/TR/REC-html40">
+    <head><meta charset="utf-8">
+    <style>
+      body { font-family: Arial; font-size: 12pt; 
+             margin-top: 2.5cm; margin-bottom: 2.5cm; 
+             margin-left: 3cm; margin-right: 2.5cm; }
+    </style>
+    </head><body>${bodyHtml}</body></html>`;
+
+  const blob = new Blob(['﻿', html], {type: 'application/msword'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = (title||'Dokument').replace(/[^a-zA-Z0-9\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df ]/g,'').trim()+'.doc';
+  a.download = (title||'Dokument').replace(/[^a-zA-Z0-9\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df ]/g,'').trim() + '.doc';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
