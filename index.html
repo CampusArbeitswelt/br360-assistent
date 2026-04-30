@@ -3,6 +3,7 @@
 
 <!-- BR360 Assistent – CampusArbeitswelt | In Shopify: Online Store > Pages > HTML-Ansicht einfügen -->
 <link href="https://fonts.googleapis.com/css2?family=DM%2BSans:wght@300;400;500;600&family=DM%2BSerif%2BDisplay&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js"></script>
 
 <style>
 
@@ -391,6 +392,7 @@
       <span id="res-title">Ergebnis</span>
       <div class="res-acts">
         <button class="btn-act" onclick="copyText()">Kopieren</button>
+        <button class="btn-act" onclick="downloadWord()">⬇ Word</button>
         <button class="btn-act p" onclick="regen()">Neu generieren</button>
       </div>
     </div>
@@ -622,7 +624,7 @@ Unterschrift Betriebsratsvorsitzende/r          Unterschrift Betriebsratsmitglie
 
 
 ________________________________          ________________________________
-${v('ba-vorsitz')||'[Name Vorsitzende/r]'}                             Name in Druckbuchstaben
+${v('ba-vorsitz')||'[Name Vorsitzende/r]'}          Name in Druckbuchstaben
 Betriebsratsvorsitzende/r`;
   }
 
@@ -886,6 +888,72 @@ function copyText(){
     setTimeout(()=>t.classList.remove('on'),2000);
   });
 }
+
+function downloadWord() {
+  const text = document.getElementById('result-text').textContent;
+  const title = document.getElementById('res-title').textContent;
+  if (!text || text.includes('Fehler')) return;
+
+  try {
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, TabStopType, TabStopPosition } = docx;
+
+    const lines = text.split('\n');
+    const children = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Signature line with two names side by side
+      if (line.includes('________________________________') && lines[i+1] && lines[i+1].includes('          ')) {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: line, font: 'Arial', size: 24 })]
+        }));
+      } else if (line.includes('          ') && i > 0 && lines[i-1].includes('________________________________')) {
+        // Split name line into two columns using tab
+        const parts = line.split('          ').filter(p => p.trim());
+        children.push(new Paragraph({
+          tabStops: [{ type: TabStopType.LEFT, position: 4320 }],
+          children: [
+            new TextRun({ text: parts[0] || '', font: 'Arial', size: 24 }),
+            new TextRun({ text: '\t' + (parts[1] || ''), font: 'Arial', size: 24 }),
+          ]
+        }));
+      } else if (line.trim() === '') {
+        children.push(new Paragraph({ children: [new TextRun('')] }));
+      } else if (line === line.toUpperCase() && line.trim().length > 3 && !line.includes('|')) {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: line, bold: true, font: 'Arial', size: 24 })]
+        }));
+      } else {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: line, font: 'Arial', size: 24 })]
+        }));
+      }
+    }
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            size: { width: 11906, height: 16838 },
+            margin: { top: 1440, right: 1440, bottom: 1440, left: 1701 }
+          }
+        },
+        children: children
+      }]
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/[^a-zA-Z0-9äöüÄÖÜß\s]/g, '').trim() + '.docx';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  } catch(e) {
+    alert('Word-Download fehlgeschlagen: ' + e.message);
+  }
+}
 </script>
 
 </div>
@@ -1059,7 +1127,7 @@ Unterschrift Betriebsratsvorsitzende/r          Unterschrift Betriebsratsmitglie
 
 
 ________________________________          ________________________________
-${v('ba-vorsitz')||'[Name Vorsitzende/r]'}                             Name in Druckbuchstaben
+${v('ba-vorsitz')||'[Name Vorsitzende/r]'}          Name in Druckbuchstaben
 Betriebsratsvorsitzende/r`;
   }
 
