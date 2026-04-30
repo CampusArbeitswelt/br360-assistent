@@ -219,6 +219,11 @@
         </div>
         <div class="f"><label>Seminarort</label><input type="text" id="bs-ort" placeholder="z.B. München oder Online"></div>
         <div class="f"><label>Ersatzmitglied (optional)</label><input type="text" id="bs-ersatz" placeholder="z.B. Thomas Klein"></div>
+        <div class="row3">
+          <div class="f"><label>Ja-Stimmen</label><input type="number" id="bs-ja" placeholder="z.B. 9" min="0"></div>
+          <div class="f"><label>Nein-Stimmen</label><input type="number" id="bs-nein" placeholder="z.B. 0" min="0"></div>
+          <div class="f"><label>Enthaltungen</label><input type="number" id="bs-enth" placeholder="z.B. 1" min="0"></div>
+        </div>
       </div>
       <button class="btn-gen" onclick="generate('beschluss-seminar')"><svg viewBox="0 0 16 16"><path d="M13 3L6 10l-3-3"/></svg>Beschluss erstellen</button>
     </div>
@@ -610,14 +615,14 @@ Ja-Stimmen: ${ja}     |     Nein-Stimmen: ${nein}     |     Enthaltungen: ${enth
 
 Der Beschluss ist damit ${erg}.
 
-${v('ba-datum') ? fd(v('ba-datum')) : '[Ort]'}, den ${fd(v('ba-datum'))}
+${gd.stadt||'[Ort]'}, den ${fd(v('ba-datum'))}
 
 
 Unterschrift Betriebsratsvorsitzende/r          Unterschrift Betriebsratsmitglied
 
 
 ________________________________          ________________________________
-${v('ba-vorsitz')||'[Name Vorsitzende/r]'}                              (Name in Druckbuchstaben)
+${v('ba-vorsitz')||'[Name Vorsitzende/r]'}                             Name in Druckbuchstaben
 Betriebsratsvorsitzende/r`;
   }
 
@@ -638,14 +643,18 @@ ${v('bs-ersatz')?`Ersatzmitglied bei Verhinderung: ${v('bs-ersatz')}`:''}
 
 Das Seminar stellt eine Schulungs- und Bildungsveranstaltung nach § 37 Abs. 6 BetrVG dar, die Kenntnisse vermittelt, die für die Arbeit des ${gremium}s erforderlich sind. Bei der zeitlichen Festlegung der Teilnahme wurden die betrieblichen Notwendigkeiten umfassend berücksichtigt.
 
-Ja-Stimmen: ___     |     Nein-Stimmen: ___     |     Enthaltungen: ___
+Ja-Stimmen: ${v('bs-ja')||'___'}     |     Nein-Stimmen: ${v('bs-nein')||'___'}     |     Enthaltungen: ${v('bs-enth')||'___'}
 
-Der Beschluss ist damit [angenommen/abgelehnt].
+Der Beschluss ist damit ${(v('bs-ja')&&v('bs-nein')) ? (parseInt(v('bs-ja'))>parseInt(v('bs-nein'))?'angenommen':'abgelehnt') : '[angenommen/abgelehnt]'}.
 
-________________________________          ________________________________
 [Ort], den ${fd(v('bs-datum'))}
 
-Unterschrift ${gremium}svorsitzende/r        Unterschrift ${gremium}smitglied`;
+
+Unterschrift ${gremium}svorsitzende/r          Unterschrift ${gremium}smitglied
+
+________________________________          ________________________________
+${gd.vorsitz||'[Name Vorsitzende/r]'}                             Name in Druckbuchstaben
+${gremium}svorsitzende/r`;
   }
 
   if (mode === 'beschluss-sv') {
@@ -1043,14 +1052,14 @@ Ja-Stimmen: ${ja}     |     Nein-Stimmen: ${nein}     |     Enthaltungen: ${enth
 
 Der Beschluss ist damit ${erg}.
 
-${v('ba-datum') ? fd(v('ba-datum')) : '[Ort]'}, den ${fd(v('ba-datum'))}
+${gd.stadt||'[Ort]'}, den ${fd(v('ba-datum'))}
 
 
 Unterschrift Betriebsratsvorsitzende/r          Unterschrift Betriebsratsmitglied
 
 
 ________________________________          ________________________________
-${v('ba-vorsitz')||'[Name Vorsitzende/r]'}                              (Name in Druckbuchstaben)
+${v('ba-vorsitz')||'[Name Vorsitzende/r]'}                             Name in Druckbuchstaben
 Betriebsratsvorsitzende/r`;
   }
 
@@ -1071,14 +1080,18 @@ ${v('bs-ersatz')?`Ersatzmitglied bei Verhinderung: ${v('bs-ersatz')}`:''}
 
 Das Seminar stellt eine Schulungs- und Bildungsveranstaltung nach § 37 Abs. 6 BetrVG dar, die Kenntnisse vermittelt, die für die Arbeit des ${gremium}s erforderlich sind. Bei der zeitlichen Festlegung der Teilnahme wurden die betrieblichen Notwendigkeiten umfassend berücksichtigt.
 
-Ja-Stimmen: ___     |     Nein-Stimmen: ___     |     Enthaltungen: ___
+Ja-Stimmen: ${v('bs-ja')||'___'}     |     Nein-Stimmen: ${v('bs-nein')||'___'}     |     Enthaltungen: ${v('bs-enth')||'___'}
 
-Der Beschluss ist damit [angenommen/abgelehnt].
+Der Beschluss ist damit ${(v('bs-ja')&&v('bs-nein')) ? (parseInt(v('bs-ja'))>parseInt(v('bs-nein'))?'angenommen':'abgelehnt') : '[angenommen/abgelehnt]'}.
 
-________________________________          ________________________________
 [Ort], den ${fd(v('bs-datum'))}
 
-Unterschrift ${gremium}svorsitzende/r        Unterschrift ${gremium}smitglied`;
+
+Unterschrift ${gremium}svorsitzende/r          Unterschrift ${gremium}smitglied
+
+________________________________          ________________________________
+${gd.vorsitz||'[Name Vorsitzende/r]'}                             Name in Druckbuchstaben
+${gremium}svorsitzende/r`;
   }
 
   if (mode === 'beschluss-sv') {
