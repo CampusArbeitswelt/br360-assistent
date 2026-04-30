@@ -19,7 +19,7 @@
 .hdr-s{color:rgba(255,255,255,.5);font-size:12px;margin-left:auto}
 
 /* Settings bar */
-.sbar{background:#f2f4f0;border-bottom:1px solid var(--gm);padding:9px 28px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--gd)}
+.sbar{display:none!important;background:#f2f4f0;border-bottom:1px solid var(--gm);padding:9px 28px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--gd)}
 .sbar strong{font-weight:600}
 .sbar.hidden{display:none}
 .btn-cfg{margin-left:auto;background:none;border:1px solid var(--gm);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--green);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:500}
@@ -107,7 +107,7 @@
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Setup overlay */
-.ov{position:fixed;inset:0;background:rgba(30,42,36,.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.ov{display:none!important}
 .ov.hidden{display:none}
 .ov-modal{background:#fff;border-radius:18px;max-width:500px;width:100%;padding:32px;box-shadow:0 24px 60px rgba(0,0,0,.18)}
 .ov-logo{width:40px;height:40px;background:#51645b;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
@@ -462,9 +462,18 @@ let tops = { ebr:[], egl:[], pr:[] };
 
 // ── Setup ─────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  const s = localStorage.getItem('br360_' + (window.location.pathname.split('/').filter(Boolean).pop() || 'default'));
-  if (s) { gd = JSON.parse(s); applyGd(); closeOv(); } 
-  else { document.getElementById('ov').classList.remove('hidden'); }
+  // Stammdaten fest eingetragen – kein Einrichtungsmodus nötig
+  gd = {
+    firma: 'Norgren GmbH, Werk Alpen',
+    gremium: 'Betriebsrat',
+    str: 'Bruckstraße 93',
+    plz: '46519',
+    stadt: 'Alpen',
+    vorsitz: 'Sandra Jäger',
+    mitgl: '11'
+  };
+  applyGd();
+  closeOv();
 });
 
 function sNext(n) {
