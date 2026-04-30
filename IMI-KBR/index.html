@@ -462,7 +462,7 @@ let tops = { ebr:[], egl:[], pr:[] };
 
 // ── Setup ─────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  const s = localStorage.getItem('br360_v3');
+  const s = localStorage.getItem('br360_' + (window.location.pathname.split('/').filter(Boolean).pop() || 'default'));
   if (s) { gd = JSON.parse(s); applyGd(); closeOv(); } 
   else { document.getElementById('ov').classList.remove('hidden'); }
 });
@@ -483,7 +483,7 @@ function sFinish() {
     vorsitz: document.getElementById('su-vorsitz').value.trim(),
     mitgl: document.getElementById('su-mitgl').value.trim()
   };
-  localStorage.setItem('br360_v3', JSON.stringify(gd));
+  localStorage.setItem('br360_' + (window.location.pathname.split('/').filter(Boolean).pop() || 'default'), JSON.stringify(gd));
   document.getElementById('su-sum').innerHTML =
     `<b>${gd.gremium}</b> der ${gd.firma}<br>${gd.str}, ${gd.plz} ${gd.stadt}<br>Vorsitzende/r: ${gd.vorsitz}${gd.mitgl?' · '+gd.mitgl+' Mitglieder':''}`;
   document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('on'));
