@@ -391,7 +391,6 @@
       <span id="res-title">Ergebnis</span>
       <div class="res-acts">
         <button class="btn-act" onclick="copyText()">Kopieren</button>
-        <button class="btn-act" onclick="downloadWord()">⬇ Word</button>
         <button class="btn-act p" onclick="regen()">Neu generieren</button>
       </div>
     </div>
@@ -594,11 +593,14 @@ function anschrift() { return v('ba-anschrift')||`${gd.gremium||'Betriebsrat'} d
 function buildPrompt(mode) {
   const firma = gd.firma || '[Firma]';
   const gremium = gd.gremium || 'Betriebsrat';
+  const REGEL = `WICHTIGE REGEL: Erfinde NIEMALS Daten, Zahlen, Namen, Daten, Personalnummern, Geburtsdaten, Fristen, Paragrafen oder sonstige Angaben die nicht explizit in den Eingaben stehen. Fehlende Angaben IMMER als leeres Feld ausgeben, z.B. [________] oder [Datum eintragen]. Keine Beispieldaten verwenden.`;
 
   if (mode === 'beschluss-allg') {
     const ja=v('ba-ja')||'___', nein=v('ba-nein')||'___', enth=v('ba-enth')||'___';
     const erg = (v('ba-ja')&&v('ba-nein')) ? (parseInt(ja)>parseInt(nein)?'angenommen':'abgelehnt') : '[angenommen/abgelehnt]';
-    return `Erstelle einen Betriebsratsbeschluss exakt in dieser Struktur (kein Markdown, nur Klartext):
+    return `${REGEL}
+
+Erstelle einen Betriebsratsbeschluss exakt in dieser Struktur (kein Markdown, nur Klartext):
 
 ${anschrift()}
 
@@ -625,7 +627,9 @@ Unterschrift Betriebsratsvorsitzende/r    Unterschrift Betriebsratsmitglied`;
 
   if (mode === 'beschluss-seminar') {
     const erg = `Der ${gremium} der ${firma} beschließt die Teilnahme von ${v('bs-tn')||'[Namen]'} am Seminar "${v('bs-titel')||'[Titel]'}" bei ${v('bs-anb')||'CampusArbeitswelt GmbH'} vom ${fd(v('bs-von'))} bis ${fd(v('bs-bis'))} in ${v('bs-ort')||'[Ort]'}.`;
-    return `Erstelle einen Betriebsratsbeschluss zur Seminarteilnahme nach § 37 Abs. 6 BetrVG (kein Markdown):
+    return `${REGEL}
+
+Erstelle einen Betriebsratsbeschluss zur Seminarteilnahme nach § 37 Abs. 6 BetrVG (kein Markdown):
 
 BETRIEBSRATSBESCHLUSS ZUR SEMINARTEILNAHME
 ${gremium} der ${firma}
@@ -655,7 +659,9 @@ ${gremium}svorsitzende/r`;
   }
 
   if (mode === 'beschluss-sv') {
-    return `Erstelle ein formelles Schreiben an die Geschäftsführung zur Hinzuziehung eines Sachverständigen § 80 Abs. 3 BetrVG (kein Markdown, Klartext):
+    return `${REGEL}
+
+Erstelle ein formelles Schreiben an die Geschäftsführung zur Hinzuziehung eines Sachverständigen § 80 Abs. 3 BetrVG (kein Markdown, Klartext):
 
 ${v('sv-name')||'[Name]'}
 ${gremium}svorsitzende/r
@@ -690,7 +696,9 @@ Unterschrift ${gremium}svorsitzende/r`;
 
   if (mode === 'einladung-br') {
     const topText = getTops('ebr') || '- Begrüßung\n- Genehmigung der Tagesordnung\n- Genehmigung des letzten Protokolls\n- [weitere Punkte]\n- Sonstiges';
-    return `Erstelle eine Einladung zur Betriebsratssitzung an alle BR-Mitglieder (kein Markdown, Klartext):
+    return `${REGEL}
+
+Erstelle eine Einladung zur Betriebsratssitzung an alle BR-Mitglieder (kein Markdown, Klartext):
 
 ${gremium} der ${firma}
 ${gd.str||''}, ${gd.plz||''} ${gd.stadt||''}
@@ -720,7 +728,9 @@ ${gremium}svorsitzende/r`;
 
   if (mode === 'einladung-gl') {
     const topText = getTops('egl') || '- Begrüßung und Eröffnung\n- Feststellung der Beschlussfähigkeit\n- [Themen]\n- Sonstiges';
-    return `Erstelle eine Einladung an die Geschäftsleitung zur Betriebsratssitzung (kein Markdown, Klartext):
+    return `${REGEL}
+
+Erstelle eine Einladung an die Geschäftsleitung zur Betriebsratssitzung (kein Markdown, Klartext):
 
 ${gremium} der ${firma}
 ${gd.str||''}, ${gd.plz||''} ${gd.stadt||''}
@@ -750,7 +760,9 @@ ${gremium}svorsitzende/r`;
   }
 
   if (mode === 'einladung-ao') {
-    return `Erstelle eine Mitteilung an die Geschäftsleitung über eine außerordentliche Betriebsratssitzung (kein Markdown, Klartext):
+    return `${REGEL}
+
+Erstelle eine Mitteilung an die Geschäftsleitung über eine außerordentliche Betriebsratssitzung (kein Markdown, Klartext):
 
 ${gremium} der ${firma}
 ${gd.str||''}, ${gd.plz||''} ${gd.stadt||''}
@@ -777,7 +789,9 @@ ${gremium}svorsitzende/r`;
 
   if (mode === 'protokoll') {
     const topText = getTops('pr') || '[Tagesordnungspunkte und Ergebnisse]';
-    return `Erstelle ein vollständiges Protokoll einer Betriebsratssitzung im professionellen Stil (kein Markdown, Klartext):
+    return `${REGEL}
+
+Erstelle ein vollständiges Protokoll einer Betriebsratssitzung im professionellen Stil (kein Markdown, Klartext):
 
 ${gremium} der ${firma}
 
@@ -805,7 +819,9 @@ Unterschrift ${gremium}svorsitzende/r         Unterschrift Protokollführung`;
   }
 
   if (mode === 'mitteilung') {
-    return `Erstelle eine Mitteilung an die Geschäftsleitung über regelmäßige Betriebsratssitzungen (kein Markdown, Klartext):
+    return `${REGEL}
+
+Erstelle eine Mitteilung an die Geschäftsleitung über regelmäßige Betriebsratssitzungen (kein Markdown, Klartext):
 
 ${gremium} der ${firma}
 ${gd.str||''}, ${gd.plz||''} ${gd.stadt||''}
