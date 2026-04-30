@@ -3,7 +3,7 @@
 
 <!-- BR360 Assistent – CampusArbeitswelt | In Shopify: Online Store > Pages > HTML-Ansicht einfügen -->
 <link href="https://fonts.googleapis.com/css2?family=DM%2BSans:wght@300;400;500;600&family=DM%2BSerif%2BDisplay&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.min.js"></script>
 
 <style>
 
@@ -624,8 +624,8 @@ Unterschrift Betriebsratsvorsitzende/r          Unterschrift Betriebsratsmitglie
 
 
 ________________________________          ________________________________
-${v('ba-vorsitz')||'[Name Vorsitzende/r]'}          Name in Druckbuchstaben
-Betriebsratsvorsitzende/r`;
+${v('ba-vorsitz')||'[Name Vorsitzende/r]'}          ________________________________
+Betriebsratsvorsitzende/r                              Betriebsratsmitglied`;
   }
 
   if (mode === 'beschluss-seminar') {
@@ -655,7 +655,7 @@ Der Beschluss ist damit ${(v('bs-ja')&&v('bs-nein')) ? (parseInt(v('bs-ja'))>par
 Unterschrift ${gremium}svorsitzende/r          Unterschrift ${gremium}smitglied
 
 ________________________________          ________________________________
-${gd.vorsitz||'[Name Vorsitzende/r]'}                             Name in Druckbuchstaben
+${gd.vorsitz||'[Name Vorsitzende/r]'}
 ${gremium}svorsitzende/r`;
   }
 
@@ -895,7 +895,8 @@ function downloadWord() {
   if (!text || text.includes('Fehler')) return;
 
   try {
-    const { Document, Packer, Paragraph, TextRun, AlignmentType, TabStopType, TabStopPosition } = docx;
+    const docxLib = window.docx || docx;
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, TabStopType, TabStopPosition } = docxLib;
 
     const lines = text.split('\n');
     const children = [];
@@ -1127,8 +1128,8 @@ Unterschrift Betriebsratsvorsitzende/r          Unterschrift Betriebsratsmitglie
 
 
 ________________________________          ________________________________
-${v('ba-vorsitz')||'[Name Vorsitzende/r]'}          Name in Druckbuchstaben
-Betriebsratsvorsitzende/r`;
+${v('ba-vorsitz')||'[Name Vorsitzende/r]'}          ________________________________
+Betriebsratsvorsitzende/r                              Betriebsratsmitglied`;
   }
 
   if (mode === 'beschluss-seminar') {
@@ -1158,7 +1159,7 @@ Der Beschluss ist damit ${(v('bs-ja')&&v('bs-nein')) ? (parseInt(v('bs-ja'))>par
 Unterschrift ${gremium}svorsitzende/r          Unterschrift ${gremium}smitglied
 
 ________________________________          ________________________________
-${gd.vorsitz||'[Name Vorsitzende/r]'}                             Name in Druckbuchstaben
+${gd.vorsitz||'[Name Vorsitzende/r]'}
 ${gremium}svorsitzende/r`;
   }
 
